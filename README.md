@@ -262,7 +262,19 @@ enterprise SSO, audit logs, background jobs.
 
 ## Development Milestones
 
-<!-- COMMIT_HISTORY (hashes filled in after commits) -->
+Actual commit history (`git log --oneline`):
+
+```
+d385722 docs: complete project documentation
+e49a948 feat: build React frontend shell, meetings, tasks and dashboard
+cc04d48 test: add backend test coverage
+5b30f70 feat: add AI meeting analysis pipeline
+4857689 feat: implement meeting, task, dashboard and export APIs
+0bc50db feat: implement authentication and role-based access
+061dcb8 feat: add database models and schema
+8749a0c feat: create FastAPI backend foundation
+ee3c07c chore: initialize MeetingMind project
+```
 
 ## License
 

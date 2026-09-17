@@ -279,3 +279,7 @@ ee3c07c chore: initialize MeetingMind project
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## Project Maintenance
+
+Last automated maintenance update: 2026-09-17

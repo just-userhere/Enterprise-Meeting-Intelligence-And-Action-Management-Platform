@@ -1,0 +1,108 @@
+name: Daily README maintenance
+
+# Runs once per day. This automation is README-ONLY: it updates a single
+# maintenance-date line in README.md and commits nothing else.
+# It never touches application code, tests, dependencies, or config.
+
+on:
+  schedule:
+    - cron: "0 6 * * *" # once daily, ~06:00 UTC
+  workflow_dispatch: {} # manual trigger for controlled testing only
+
+permissions:
+  contents: write # least privilege needed to push the README commit
+
+concurrency:
+  group: daily-readme-maintenance
+  cancel-in-progress: false
+
+jobs:
+  readme-maintenance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure Git identity
+        run: |
+          git config user.name "just-userhere"
+          git config user.email "humanerror0729@gmail.com"
+          git config user.name
+          git config user.email
+
+      - name: Determine today's date (UTC)
+        run: echo "TODAY=$(date -u +%F)" >> "$GITHUB_ENV"
+
+      - name: Update maintenance date in README.md
+        env:
+          TODAY: ${{ env.TODAY }}
+        run: |
+          python3 - <<'EOF'
+          import os, re
+          today = os.environ.get("TODAY", "").strip()
+          assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", today), "invalid date"
+          path = "README.md"
+          with open(path, encoding="utf-8") as f:
+              text = f.read()
+          line = f"Last automated maintenance update: {today}"
+          new_text, n = re.subn(
+              r"Last automated maintenance update: \d{4}-\d{2}-\d{2}",
+              line,
+              text,
+              count=1,
+          )
+          if n == 0:
+              # Section does not exist yet: append it (only addition allowed).
+              if not new_text.endswith("\n"):
+                  new_text += "\n"
+              new_text += f"\n## Project Maintenance\n\n{line}\n"
+          if new_text != text:
+              with open(path, "w", encoding="utf-8") as f:
+                  f.write(new_text)
+              print("README.md maintenance date updated to", today)
+          else:
+              print("README.md already up to date; no change.")
+          EOF
+
+      - name: Verify only README.md changed
+        run: |
+          echo "--- git status ---"
+          git status --porcelain
+          CHANGED="$(git status --porcelain | awk '{print $2}')"
+          if [ -z "$CHANGED" ]; then
+            echo "No changes detected — nothing to commit."
+            echo "SKIP_COMMIT=true" >> "$GITHUB_ENV"
+            exit 0
+          fi
+          if [ "$CHANGED" != "README.md" ]; then
+            echo "ERROR: unexpected files changed; aborting."
+            git status --short
+            exit 1
+          fi
+          echo "--- git diff ---"
+          git diff -- README.md
+
+      - name: Check for accidental secrets
+        if: env.SKIP_COMMIT != 'true'
+        run: |
+          if git diff -- README.md | grep -iE 'BEGIN [A-Z ]*PRIVATE KEY|sk-[A-Za-z0-9]{8,}|gh[pousr]_[A-Za-z0-9]{10,}'; then
+            echo "ERROR: possible secret in diff; aborting."
+            exit 1
+          fi
+          echo "No secrets detected in diff."
+
+      - name: Commit and push
+        if: env.SKIP_COMMIT != 'true'
+        run: |
+          git add README.md
+          git commit -m "chore: update daily README maintenance"
+          echo "--- commit author ---"
+          git log -1 --format="%h | %an | %ae | %s"
+          AUTHOR="$(git log -1 --format='%an|%ae')"
+          if [ "$AUTHOR" != "just-userhere|humanerror0729@gmail.com" ]; then
+            echo "ERROR: unexpected commit author: $AUTHOR"
+            exit 1
+          fi
+          git push
+          echo "--- push verified ---"
+          git status -sb

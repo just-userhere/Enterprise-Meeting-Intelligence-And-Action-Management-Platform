@@ -4,6 +4,7 @@ node_modules/
 # build output
 dist/
 dist-ssr/
+.vite/
 
 # logs
 *.log
@@ -16,7 +17,19 @@ npm-debug.log*
 .DS_Store
 Thumbs.db
 
-# env
+# env (never commit real secrets)
 .env
 .env.local
 .env.*.local
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+*.db
+*.sqlite3
+test_meetingmind.db
+meetingmind.db

@@ -282,4 +282,4 @@ MIT — see [LICENSE](LICENSE).
 
 ## Project Maintenance
 
-Last automated maintenance update: 2026-10-19
+Last automated maintenance update: 2026-10-20
